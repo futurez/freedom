@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package pb3;
+
+message ProtoMessage {
+  uint32 msgId = 1; //消息ID
+  int32  code  = 2; //错误码
+  bytes  body  = 3; //消息体
+}

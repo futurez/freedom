@@ -1,9 +1,9 @@
 package fnet
 
 import (
-	"freedom/finterface"
-	"freedom/flog"
-	"freedom/fmessage"
+	"github.com/futurez/freedom/finterface"
+	"github.com/futurez/freedom/flog"
+	"github.com/futurez/freedom/fmessage"
 	"testing"
 )
 
@@ -18,7 +18,7 @@ func TestHandle(t *testing.T) {
 	msg := fmessage.NewMessage(1, 0, nil)
 	ctx := allocateContext().(*Context)
 	ctx.msg = msg
-	
+
 	hf := HandlerFunc(HelloHandle)
 	hf.PreHook(ctx)
 	hf.Handle(ctx)

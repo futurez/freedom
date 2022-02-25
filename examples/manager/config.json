@@ -1,0 +1,10 @@
+{
+  "websocketIP":   "0.0.0.0",
+  "websocketPort": 9999,
+  "serverType":    1,
+  "serverId"  :    2,
+  "maxWsConn" :    10000,
+  "workerPoolSize": 10,
+  "workerMsgSize": 100,
+  "sendMsgChanLen": 100
+}

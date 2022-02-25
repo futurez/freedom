@@ -12,21 +12,35 @@ import (
 // 服务器唯一链接
 var G_WsServer finterface.IServer
 
+//  通过类型获取服务器链接列表,(一个类型服务器有多个实力,如游戏服务器,接入服务器等)
+func GetSvrConnListByType(svrType int32) []finterface.IConnection {
+	list, _ := G_WsServer.GetConnManager().GetCond(func(conn finterface.IConnection) finterface.CondResult {
+		if val, ok := conn.GetCache(eproto.CACHE_SVR_TYPE); !ok {
+			return finterface.Cond_InConform
+		} else if val.(int32) == svrType {
+			return finterface.Cond_Conform
+		} else {
+			return finterface.Cond_InConform
+		}
+	})
+	return list
+}
+
 //  通过类型获取服务器链接
 func GetSvrConnByType(svrType int32) finterface.IConnection {
-	conn, err := G_WsServer.GetConnManager().GetCond(func(conn finterface.IConnection) bool {
+	list, err := G_WsServer.GetConnManager().GetCond(func(conn finterface.IConnection) finterface.CondResult {
 		if val, ok := conn.GetCache(eproto.CACHE_SVR_TYPE); !ok {
-			return false
+			return finterface.Cond_InConform
 		} else if val.(int32) == svrType {
-			return true
+			return finterface.Cond_LastOne
 		} else {
-			return false
+			return finterface.Cond_InConform
 		}
 	})
 	if err != nil {
 		return nil
 	}
-	return conn
+	return list[0]
 }
 
 func main() {

@@ -25,7 +25,6 @@ func init() {
 		EncodeDuration: zapcore.SecondsDurationEncoder,
 		EncodeCaller:   zapcore.ShortCallerEncoder,
 	}
-
 	atomLevel := zap.NewAtomicLevelAt(zap.DebugLevel)
 	config := zap.Config{
 		Level:             atomLevel,
@@ -40,30 +39,12 @@ func init() {
 	}
 	skip := zap.AddCallerSkip(1)
 	stack := zap.AddStacktrace(zap.NewAtomicLevelAt(zap.ErrorLevel)) //设置哪一个等级level打印栈空间
-	//stack := zap.AddStacktrace(zap.NewAtomicLevelAt(zap.ErrorLevel))//设置哪一个等级level打印栈空间
 	logger, _ = config.Build(skip, stack)
 	supar = logger.Sugar()
 }
 
-func InitLogger(serverName string, serverId int32, logPath string, level Level) {
-	if logger != nil {
-		logger.Sync()
-		logger = nil
-		supar = nil
-	}
-	if logPath == "" {
-		logPath = "./log"
-	}
-	fileName := fmt.Sprintf("%s/%s_%d.log", logPath, serverName, serverId)
-	fmt.Println(fileName)
-	hook := lumberjack.Logger{
-		Filename:   fileName, // 日志文件路径
-		MaxSize:    2048,     // 每个日志文件保存的最大尺寸 单位：M
-		MaxBackups: 30,       // 日志文件最多保存多少个备份
-		MaxAge:     7,        // 文件最多保存多少天
-		Compress:   true,     // 是否压缩
-	}
-	encoderConfig := zapcore.EncoderConfig{
+func getEncoder() zapcore.Encoder {
+	encoder := zapcore.EncoderConfig{
 		TimeKey:        "T",
 		LevelKey:       "L",
 		NameKey:        "N",
@@ -75,10 +56,32 @@ func InitLogger(serverName string, serverId int32, logPath string, level Level) 
 		EncodeLevel:    zapcore.CapitalColorLevelEncoder,
 		EncodeTime:     zapcore.TimeEncoderOfLayout("2006-01-02 15:04:05.999999999"),
 		EncodeDuration: zapcore.MillisDurationEncoder,
-		//EncodeCaller:   zapcore.ShortCallerEncoder,
-		EncodeCaller: zapcore.FullCallerEncoder,
+		EncodeCaller:   zapcore.FullCallerEncoder,
 	}
+	return zapcore.NewConsoleEncoder(encoder)
+}
 
+func getWriter(fileName string) zapcore.WriteSyncer {
+	hook := lumberjack.Logger{
+		Filename:   fileName, // 日志文件路径
+		MaxSize:    2048,     // 每个日志文件保存的最大尺寸 单位：M
+		MaxBackups: 30,       // 日志文件最多保存多少个备份
+		MaxAge:     7,        // 文件最多保存多少天
+		Compress:   true,     // 是否压缩
+	}
+	return zapcore.NewMultiWriteSyncer(zapcore.AddSync(os.Stdout), zapcore.AddSync(&hook))
+}
+
+func getFileName(serverName string, serverId int32, logPath string) string {
+	if logPath == "" {
+		logPath = "./log"
+	}
+	fileName := fmt.Sprintf("%s/%s_%d.log", logPath, serverName, serverId)
+	//fmt.Println(fileName)
+	return fileName
+}
+
+func getLoggerLevel(level Level) zap.AtomicLevel {
 	logLevel := zapcore.DebugLevel
 	switch level {
 	case DebugLevel:
@@ -96,24 +99,34 @@ func InitLogger(serverName string, serverId int32, logPath string, level Level) 
 	case FatalLevel:
 		logLevel = zapcore.FatalLevel
 	}
+	return zap.NewAtomicLevelAt(logLevel)
+}
 
-	atomLevel := zap.NewAtomicLevelAt(logLevel)
+func InitLogger(serverName string, serverId int32, logPath string, level Level) {
+	if logger != nil {
+		logger.Sync()
+		logger = nil
+		supar = nil
+	}
 	core := zapcore.NewCore(
-		zapcore.NewConsoleEncoder(encoderConfig),
-		zapcore.NewMultiWriteSyncer(zapcore.AddSync(os.Stdout), zapcore.AddSync(&hook)),
-		atomLevel)
-
-	caller := zap.AddCaller()
-	skip := zap.AddCallerSkip(1)
-	develop := zap.Development()
-	stack := zap.AddStacktrace(zap.NewAtomicLevelAt(zap.ErrorLevel)) //设置哪一个等级level打印栈空间
-	//filed := zap.Fields(zap.Int32(serverName, serverId))
-	logger = zap.New(core, caller, skip, develop, stack) //, filed)
+		getEncoder(),
+		getWriter(getFileName(serverName, serverId, logPath)),
+		getLoggerLevel(level))
+	logger = zap.New(core,
+		zap.AddCaller(),
+		zap.AddCallerSkip(1),
+		zap.Development(),
+		zap.AddStacktrace(zap.NewAtomicLevelAt(zap.ErrorLevel)), //设置哪一个等级level打印栈空间
+		//zap.Fields(zap.Int32(serverName, serverId))
+	)
 	supar = logger.Sugar()
 }
 
 func SyncLogger() {
 	if logger != nil {
-		logger.Sync()
+		err := logger.Sync()
+		if err != nil {
+			return
+		}
 	}
 }

@@ -48,11 +48,13 @@ func main() {
 
 	defer flog.SyncLogger()
 	// 监听端口
-	G_WsServer = fnet.NewWsServer("0.0.0.0", 7777, "/msg", fmessage.NewJsonPack(), &ServerConn{})
+	G_WsServer = fnet.NewWsServer("/msg", fmessage.NewJsonPack(), &ServerConn{})
+
+	InitRouter()
 
 	// 主动链接管理服务器
-	svrClient := ServerClient{SvrInfo: eproto.ServerInfo{ServerType: eproto.MANAGER_SERVER, ServerId: 1, ListenIp: "127.0.0.1", ListenPort: 9999}}
-	wsClient := fnet.NewWsClient("127.0.0.1", 9999, "/msg", true, &svrClient, G_WsServer)
+	svrClient := NewServerClient(eproto.MANAGER_SERVER, 1, "127.0.0.1", 9999)
+	wsClient := fnet.NewWsClient("127.0.0.1", 9999, "/msg", true, svrClient, G_WsServer)
 	wsClient.ConnectWebSocket()
 
 	futils.Graceful()

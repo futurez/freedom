@@ -17,7 +17,7 @@ var connIdNode *snowflake.Node
 func generateConnId() int64 {
 	connIdOnce.Do(func() {
 		var err error
-		connIdNode, err = snowflake.NewNode(int64(fconf.GConf.ServerType))
+		connIdNode, err = snowflake.NewNode(int64(fconf.Conf.ServerType))
 		if err != nil {
 			flog.Panic("new connIdNode err = ", err.Error())
 		}

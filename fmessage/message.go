@@ -13,7 +13,6 @@ type Message struct {
 
 func NewMessage(msgId uint32, code int32, msgData []byte) finterface.IMessage {
 	return &Message{
-		//msgType: msgType,
 		msgId:   msgId,
 		msgData: msgData,
 		msgLen:  uint32(len(msgData)),

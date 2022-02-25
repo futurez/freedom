@@ -6,16 +6,19 @@ import (
 	"io/ioutil"
 )
 
-func ReadConfig(path string, cfg interface{}) {
+func ReadConfig(path string, cfg interface{}) error {
 	if path == "" {
 		path = "app.cfg"
 	}
 	rBuffer, err := ioutil.ReadFile(path)
 	if err != nil {
-		flog.Fatal(err)
+		flog.Warnf(err.Error())
+		return err
 	}
 	err = json.Unmarshal(rBuffer, cfg)
 	if err != nil {
-		flog.Fatal(err)
+		flog.Warnf(err.Error())
+		return err
 	}
+	return nil
 }

@@ -23,9 +23,9 @@ type MsgRouter struct {
 func newMsgRouter() finterface.IRouter {
 	r := &MsgRouter{
 		mapHandle:      make(map[uint32]finterface.IMsgHandle),
-		workerPoolSize: int64(fconf.GConf.WorkerPoolSize),
+		workerPoolSize: int64(fconf.Conf.WorkerPoolSize),
 		// 每一个worker对应一个queue
-		workerMsgQueue: make([]chan finterface.IContext, fconf.GConf.WorkerPoolSize),
+		workerMsgQueue: make([]chan finterface.IContext, fconf.Conf.WorkerPoolSize),
 		state:          0,
 	}
 	r.pool.New = func() interface{} {
@@ -42,13 +42,13 @@ func (r *MsgRouter) AddHandleFunc(msgId uint32, handle func(ctx finterface.ICont
 	r.mapHandle[msgId] = HandlerFunc(handle)
 }
 
-func (r *MsgRouter) SendConnMsg(conn finterface.IConnection, msg finterface.IMessage) {
-	flog.Infof("msgRouter [pool-get]  connId:%d msgId:%d", conn.GetConnID(), msg.GetMsgId())
+func (r *MsgRouter) DoMsgHandle(conn finterface.IConnection, msg finterface.IMessage) {
+	flog.Debugf("[freedom] <doMsgHandler> <pool-get> %d | %d", conn.GetConnID(), msg.GetMsgId())
 	ctx := r.pool.Get().(*Context)
 	ctx.conn = conn
 	ctx.msg = msg
 
-	if r.workerPoolSize > 0 {
+	if r.workerPoolSize > 0 && atomic.CompareAndSwapInt32(&r.state, 1, 1) {
 		workId := conn.GetConnID() % r.workerPoolSize
 		r.workerMsgQueue[workId] <- ctx
 	} else {
@@ -65,10 +65,10 @@ func (r *MsgRouter) StartWorkerPool() {
 		flog.Warnf("Router already start worker pool")
 		return
 	}
-	flog.Infof("Router start worker pool")
+	flog.Infof("Router start worker pool size[%d]", r.workerPoolSize)
 
 	for i := int64(0); i < r.workerPoolSize; i++ {
-		r.workerMsgQueue[i] = make(chan finterface.IContext, fconf.GConf.WorkerMsgCap)
+		r.workerMsgQueue[i] = make(chan finterface.IContext, fconf.Conf.WorkerMsgCap)
 		go r.startWorkerFunc(i, r.workerMsgQueue[i])
 	}
 }
@@ -105,8 +105,9 @@ func (r *MsgRouter) startWorkerFunc(workId int64, msgQueue <-chan finterface.ICo
 }
 
 func (r *MsgRouter) doMsgHandler(ctx finterface.IContext) {
+	startTime := time.Now()
 	defer func() {
-		flog.Infof("msgRouter [pool-put] connId:%d msgId:%d", ctx.GetConnection().GetConnID(), ctx.GetMsgId())
+		flog.Infof("[freedom] <doMsgHandler> <pool-put> %d | %d |%s", ctx.GetConnection().GetConnID(), ctx.GetMsgId(), time.Since(startTime).String())
 		r.pool.Put(ctx)
 		futils.RecoverFromPanic("doMsgHandler", nil)
 	}()
@@ -116,9 +117,7 @@ func (r *MsgRouter) doMsgHandler(ctx finterface.IContext) {
 		flog.Errorf("handler msgId = %d is not found\n", ctx.GetMsgId())
 		return
 	}
-	startTime := time.Now()
 	handler.PreHook(ctx)
 	handler.Handle(ctx)
 	handler.PostHook(ctx)
-	flog.Debugf("handler msgId = %d expend time=%s\n", ctx.GetMsgId(), time.Since(startTime).String())
 }

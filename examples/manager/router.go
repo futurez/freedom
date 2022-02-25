@@ -9,6 +9,7 @@ import (
 
 func ServerRegister(context finterface.IContext) {
 	msg := context.GetMessage()
+
 	req := eproto.ServerRegisterReq{}
 	if err := json.Unmarshal(msg.GetMsgData(), &req); err != nil {
 		flog.Errorf("[ServerRegister] msg unmarshal err : %s", err.Error())

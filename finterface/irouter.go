@@ -1,8 +1,8 @@
 package finterface
 
 type IRouter interface {
-	// 发送网络消息
-	SendConnMsg(ctx IConnection, msg IMessage)
+	// 处理网络消息
+	DoMsgHandle(ctx IConnection, msg IMessage)
 	// 开启工作池
 	StartWorkerPool()
 	// 关闭工作池

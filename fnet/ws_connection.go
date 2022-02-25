@@ -42,7 +42,7 @@ func newWsConnection(server finterface.IServer, wsSocket *websocket.Conn, connId
 		conn:        wsSocket,
 		connId:      connId,
 		connStats:   finterface.CONNECTING,
-		sendMsgChan: make(chan finterface.IMessage, fconf.GConf.SendMsgChanLen),
+		sendMsgChan: make(chan finterface.IMessage, fconf.Conf.SendMsgChanLen),
 		cache:       make(map[string]interface{}),
 		connNotify:  notify,
 	}
@@ -157,7 +157,7 @@ func (c *WsConn) readPump() {
 
 		default:
 			{
-				msgType, msgData, err := c.conn.ReadMessage()
+				_, msgData, err := c.conn.ReadMessage()
 				if err != nil {
 					flog.Warnf("%s [readPump] wsConnId:%d ReadMessage err:%v", c.RemoteAddr(), c.connId, err)
 					return
@@ -168,9 +168,9 @@ func (c *WsConn) readPump() {
 					flog.Errorf("%s [readPump] wsConnId:%d unpack msg=%s err=%s", c.RemoteAddr(), string(msgData), err.Error())
 					continue
 				}
-				flog.Debugf("%s [readPump] wsConnId:%d type:%d len:%d", c.RemoteAddr(), c.connId, msgType, len(msgData))
+				flog.Debugf("[freedom] [readPump] %d | %d", c.connId, len(msgData))
 				// 发送conn,msg
-				c.ws.GetRouter().SendConnMsg(c, msg)
+				c.ws.GetRouter().DoMsgHandle(c, msg)
 			}
 		}
 	}
@@ -220,7 +220,7 @@ func (c *WsConn) SendMessage(msg finterface.IMessage) (err error) {
 	select {
 	case c.sendMsgChan <- msg:
 		// 发送成功
-		flog.Debugf("Send MsgId:%d Code:%d Len:%d", msg.GetMsgId(), msg.GetErrCode(), msg.GetMsgLen())
+		flog.Debugf("[freedom] Send %d | %d |%d", msg.GetMsgId(), msg.GetErrCode(), msg.GetMsgLen())
 	case <-c.connCtx.Done():
 		err = errors.New("ERR_CONNECTION_LOSS")
 	default:

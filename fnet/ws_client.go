@@ -16,7 +16,7 @@ type WsClient struct {
 	path        string                 //请求url (ws://ip:port/path)
 	IsReconnect bool                   //是否重新链接
 	notify      finterface.IConnNotify //链接状态变更通知
-	server      finterface.IServer     //
+	server      finterface.IServer     //添加到的服务器
 
 	finterface.IConnection // ws connect
 }
@@ -30,7 +30,6 @@ func NewWsClient(ip string, port int32, path string, bReconnect bool, notify fin
 		IsReconnect: bReconnect,
 		notify:      notify,
 		server:      server,
-
 		IConnection: nil,
 	}
 	return &c
@@ -41,12 +40,12 @@ func (c *WsClient) ConnectWebSocket() {
 
 	go func() {
 		for {
-			flog.Debugf("ConnectWebSocket connecting to %s", u.String())
+			flog.Debugf("[freedom] ConnectWebSocket connecting to %s", u.String())
 			conn, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 			if err != nil {
-				flog.Warnf("ConnectWebSocket connecting to %s err:%s", u.String(), err.Error())
+				flog.Warnf("[freedom] ConnectWebSocket connecting to %s err:%s", u.String(), err.Error())
 				if !c.IsReconnect {
-					flog.Infof("ConnectWebSocket : not reconnect, quit remote %s", u.String())
+					flog.Infof("[freedom] ConnectWebSocket : not reconnect, quit remote %s", u.String())
 					break
 				}
 				time.Sleep(30 * time.Second)
@@ -63,7 +62,7 @@ func (c *WsClient) ConnectWebSocket() {
 }
 
 func (c *WsClient) OnConnect(conn finterface.IConnection) {
-	flog.Debugf("WsClient %s connected", conn.RemoteAddr())
+	flog.Debugf("[freedom] WsClient %s connected", conn.RemoteAddr())
 	if c.notify != nil {
 		c.notify.OnConnect(c)
 	}
@@ -83,7 +82,6 @@ func (c *WsClient) OnDisconnect(conn finterface.IConnection) {
 
 func (c *WsClient) Close() bool {
 	flog.Debugf("WsClient %s close.", c.RemoteAddr())
-
 	if c.IConnection != nil {
 		c.IConnection.Close()
 	}

@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"github.com/futurez/freedom/examples/eproto"
+	"github.com/futurez/freedom/fconf"
 	"github.com/futurez/freedom/finterface"
 	"github.com/futurez/freedom/flog"
 	"github.com/futurez/freedom/fmessage"
@@ -47,10 +49,11 @@ func main() {
 	flog.InitLogger("manager", eproto.MANAGER_SERVER, "./log", flog.DebugLevel)
 	defer flog.SyncLogger()
 
-	G_WsServer = fnet.NewWsServer("0.0.0.0", 9999, "/msg", fmessage.NewJsonPack(), &ServerConn{})
-	G_WsServer.Start()
+	G_WsServer = fnet.NewWsServer("/msg", fmessage.NewJsonPack(), &ServerConn{})
 	// 添加消息路由
 	InitRouter()
+
+	G_WsServer.Run(fmt.Sprintf("%s:%d", fconf.Conf.WebsocketIP, fconf.Conf.WebsocketPort))
 
 	futils.Graceful()
 }

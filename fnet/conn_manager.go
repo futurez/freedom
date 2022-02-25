@@ -25,7 +25,7 @@ func (m *ConnManager) Add(conn finterface.IConnection) {
 	connId := conn.GetConnID()
 	m.mapConnections[connId] = conn
 
-	flog.Info("[ConnManager] connId:", connId, " add to  successfully: conn num = ", len(m.mapConnections))
+	flog.Infof("[freedom] <add> %d | %d ", connId, len(m.mapConnections))
 }
 
 //删除链接

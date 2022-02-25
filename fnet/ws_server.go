@@ -1,19 +1,19 @@
 package fnet
 
 import (
-	"fmt"
 	"github.com/futurez/freedom/fconf"
 	"github.com/futurez/freedom/finterface"
 	"github.com/futurez/freedom/flog"
 	"github.com/futurez/freedom/fmessage"
 	"github.com/gorilla/websocket"
 	"net/http"
+	"os"
 	"sync/atomic"
 )
 
 type WsServer struct {
-	ip         string                  //监听IP
-	port       int32                   //监听端口
+	//ip         string                  //监听IP
+	//port       int32                   //监听端口
 	pattern    string                  //请求url (ws://ip:port/pattern)
 	connMgr    finterface.IConnManager //链接对象管理
 	msgPack    finterface.IMsgPack     //基础包(head+body)
@@ -22,11 +22,20 @@ type WsServer struct {
 	stats      int32                   //状态1:启动,0:终止
 }
 
-// NewWsServer msgpack : default eproto pack
-func NewWsServer(ip string, port int32, pattern string, pack finterface.IMsgPack, notify finterface.IConnNotify) finterface.IServer {
+func DefaultWsServer() finterface.IServer {
 	ws := WsServer{
-		ip:      ip,
-		port:    port,
+		pattern:    "/msg",
+		connMgr:    newConnManager(),
+		msgPack:    fmessage.NewJsonPack(),
+		router:     newMsgRouter(),
+		connNotify: &BaseClient{},
+	}
+	return &ws
+}
+
+// NewWsServer msgpack : default eproto pack
+func NewWsServer(pattern string, pack finterface.IMsgPack, notify finterface.IConnNotify) finterface.IServer {
+	ws := WsServer{
 		pattern: pattern,
 		connMgr: newConnManager(),
 		router:  newMsgRouter(),
@@ -58,33 +67,48 @@ func (ws *WsServer) serveWs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if ws.connMgr.Len() >= fconf.GConf.MaxWsConn {
-		flog.Warnf("websocket connection is full, maxWsConn=%d", fconf.GConf.MaxWsConn)
+	if ws.connMgr.Len() >= fconf.Conf.MaxWsConn {
+		flog.Warnf("websocket connection is full, maxWsConn=%d", fconf.Conf.MaxWsConn)
 		conn.Close()
 		return
 	}
 
 	connId := generateConnId()
 	wsConn := newWsConnection(ws, conn, connId, ws.connNotify)
-	flog.Infof("websocket listen = ws://%s:%d%s new connId=%d remoteAddr=%s", ws.ip, ws.port, ws.pattern, connId, conn.RemoteAddr().String())
+	flog.Infof("websocket new connId=%d remoteAddr=%s", connId, conn.RemoteAddr().String())
 	wsConn.Connected()
 }
 
-func (ws *WsServer) Start() {
+func resolveAddress(addr []string) string {
+	switch len(addr) {
+	case 0:
+		if port := os.Getenv("PORT"); port != "" {
+			flog.Debugf("Environment variable PORT=\"%s\"", port)
+			return ":" + port
+		}
+		flog.Debugf("Environment variable PORT is undefined. Using port :8080 by default")
+		return ":8080"
+	case 1:
+		return addr[0]
+	default:
+		panic("too many parameters")
+	}
+}
+
+func (ws *WsServer) Run(addr ...string) {
 	if !atomic.CompareAndSwapInt32(&ws.stats, 0, 1) {
 		flog.Errorf("WsServer already start...")
 		return
 	}
-	flog.Infof("WsServer start...")
 
 	ws.router.StartWorkerPool()
 	go func() {
 		http.HandleFunc(ws.pattern, func(w http.ResponseWriter, r *http.Request) {
 			ws.serveWs(w, r)
 		})
-		addr := fmt.Sprintf("%s:%d", ws.ip, ws.port)
-		flog.Info("Start listen ws://" + addr + ws.pattern)
-		if err := http.ListenAndServe(addr, nil); err != nil {
+		address := resolveAddress(addr)
+		flog.Info("Start listen ws://" + address + ws.pattern)
+		if err := http.ListenAndServe(address, nil); err != nil {
 			flog.Error("err:", err)
 			return
 		}
@@ -96,8 +120,6 @@ func (ws *WsServer) Stop() {
 		flog.Errorf("WsServer already stop...")
 		return
 	}
-
-	flog.Infof("stop ws://%s:%d:%s", ws.ip, ws.port, ws.pattern)
 
 	ws.router.StopWorkerPool()
 	ws.connMgr.Clear()

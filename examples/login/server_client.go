@@ -2,23 +2,42 @@ package main
 
 import (
 	"github.com/futurez/freedom/examples/eproto"
+	"github.com/futurez/freedom/fconf"
 	"github.com/futurez/freedom/finterface"
 	"github.com/futurez/freedom/flog"
 )
 
 // 服务器链接
 type ServerClient struct {
-	SvrInfo eproto.ServerInfo
+	eproto.ServerInfo
+}
+
+func NewServerClient(svrType, svrId int32, ip string, port int32) *ServerClient {
+	return &ServerClient{eproto.ServerInfo{
+		ServerType: svrType,
+		ServerId:   svrId,
+		ListenIp:   ip,
+		ListenPort: port,
+	}}
 }
 
 //调用OnConnect
 func (s *ServerClient) OnConnect(conn finterface.IConnection) {
-	conn.SetCache(eproto.CACHE_SVR_TYPE, s.SvrInfo)
+	conn.SetCache(eproto.CACHE_SVR_TYPE, s.ServerInfo)
 
 	//str := fmt.Sprintf("serverType=%d", s.ServerType)
 	//
 	//conn.SendMsgData(1, 0, []byte(str))
 	//flog.Debug("Connect Send ", str)
+	req := eproto.ServerRegisterReq{
+		Info: eproto.ServerInfo{
+			ServerType: eproto.LOGIN_SERVER,
+			ServerId:   fconf.Conf.ServerId,
+			ListenIp:   fconf.Conf.WebsocketIP,
+			ListenPort: fconf.Conf.WebsocketPort,
+		},
+	}
+	conn.SendMsgJson(eproto.CMD_SERVER_REGISTER_REQ, 0, req)
 }
 
 func (s *ServerClient) OnDisconnect(conn finterface.IConnection) {

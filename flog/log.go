@@ -115,7 +115,7 @@ func InitLogger(serverName string, serverId int32, logPath string, level Level) 
 	logger = zap.New(core,
 		zap.AddCaller(),
 		zap.AddCallerSkip(1),
-		zap.Development(),
+		//zap.Development(),
 		zap.AddStacktrace(zap.NewAtomicLevelAt(zap.ErrorLevel)), //设置哪一个等级level打印栈空间
 		//zap.Fields(zap.Int32(serverName, serverId))
 	)

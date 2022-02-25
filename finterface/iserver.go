@@ -2,7 +2,7 @@ package finterface
 
 type IServer interface {
 	//启动服务
-	Start()
+	Run(addr ...string)
 	//停止服务
 	Stop()
 	//获取消息解析器

@@ -12,12 +12,12 @@ func ReadConfig(path string, cfg interface{}) error {
 	}
 	rBuffer, err := ioutil.ReadFile(path)
 	if err != nil {
-		flog.Warnf(err.Error())
+		flog.Warn("[freedom] ", err.Error())
 		return err
 	}
 	err = json.Unmarshal(rBuffer, cfg)
 	if err != nil {
-		flog.Warnf(err.Error())
+		flog.Warn("[freedom] ", err.Error())
 		return err
 	}
 	return nil

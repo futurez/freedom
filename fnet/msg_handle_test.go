@@ -20,9 +20,9 @@ func TestHandle(t *testing.T) {
 	ctx.msg = msg
 
 	hf := HandlerFunc(HelloHandle)
-	hf.PreHook(ctx)
+	hf.PreHandle(ctx)
 	hf.Handle(ctx)
-	hf.PostHook(ctx)
+	hf.PostHandle(ctx)
 
 	bf := MsgHandle{}
 	bf.PreHook(ctx)

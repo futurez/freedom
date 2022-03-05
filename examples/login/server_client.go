@@ -7,7 +7,7 @@ import (
 	"github.com/futurez/freedom/flog"
 )
 
-// 服务器链接
+// ServerClient 服务器链接
 type ServerClient struct {
 	eproto.ServerInfo
 }
@@ -21,14 +21,8 @@ func NewServerClient(svrType, svrId int32, ip string, port int32) *ServerClient 
 	}}
 }
 
-//调用OnConnect
 func (s *ServerClient) OnConnect(conn finterface.IConnection) {
 	conn.SetCache(eproto.CACHE_SVR_TYPE, s.ServerInfo)
-
-	//str := fmt.Sprintf("serverType=%d", s.ServerType)
-	//
-	//conn.SendMsgData(1, 0, []byte(str))
-	//flog.Debug("Connect Send ", str)
 	req := eproto.ServerRegisterReq{
 		Info: eproto.ServerInfo{
 			ServerType: eproto.LOGIN_SERVER,

@@ -1,8 +1,8 @@
-module github.com/futurez/freedom/examples/client
+module github.com/futurez/freedom/examples/login
 
 go 1.17
 
-require github.com/futurez/freedom v0.0.0-00010101000000-000000000000
+require github.com/futurez/freedom v1.0.0
 
 require (
 	github.com/bwmarrin/snowflake v0.3.0 // indirect

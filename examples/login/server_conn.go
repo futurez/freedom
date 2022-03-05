@@ -6,16 +6,16 @@ import (
 	"github.com/futurez/freedom/flog"
 )
 
-// 被动接受的服务器链接
+// ServerConn 被动接受的服务器链接
 type ServerConn struct {
 	SvrInfo eproto.ServerInfo
 }
 
-//调用OnConnect
+// OnConnect 调用OnConnect
 func (s *ServerConn) OnConnect(conn finterface.IConnection) {
 }
 
-//被动链接断开
+// OnDisconnect 被动链接断开
 func (s *ServerConn) OnDisconnect(conn finterface.IConnection) {
 	if val, ok := conn.GetCache(eproto.CACHE_SVR_TYPE); !ok {
 		flog.Warnf("not found svr type %d", val)

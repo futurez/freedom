@@ -20,5 +20,5 @@ func ServerRegisterResp(context finterface.IContext) {
 }
 
 func InitRouter() {
-	G_WsServer.AddHandleFunc(eproto.CMD_SERVER_REGISTER_RESP, ServerRegisterResp)
+	GWsSvr.AddHandleFunc(eproto.CMD_SERVER_REGISTER_RESP, ServerRegisterResp)
 }

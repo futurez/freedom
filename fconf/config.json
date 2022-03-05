@@ -1,4 +1,5 @@
 {
+  "serverName":    "freedomServer",
   "websocketIP":   "0.0.0.0",
   "websocketPort": 8888,
   "serverType":    1,

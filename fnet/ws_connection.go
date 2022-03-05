@@ -102,7 +102,7 @@ func (c *WsConn) Close() bool {
 		return false
 	}
 
-	flog.Info(c.remoteAddr(), " Close connId = ", c.connId, " stats = ", c.connStats)
+	flog.Info("[freedom] ", c.remoteAddr(), " Close connId = ", c.connId, " stats = ", c.connStats)
 	// 关闭readPump
 	if c.connCancel != nil {
 		c.connCancel()
@@ -142,7 +142,7 @@ func (c *WsConn) onClosed() bool {
 
 func (c *WsConn) readPump() {
 	defer func() {
-		flog.Info(c.remoteAddr(), " [readPump] exit! connId:", c.connId)
+		flog.Info("[freedom] ", c.remoteAddr(), " [readPump] exit! connId:", c.connId)
 		if !c.Close() {
 			c.onClosed()
 		}
@@ -159,16 +159,16 @@ func (c *WsConn) readPump() {
 			{
 				_, msgData, err := c.conn.ReadMessage()
 				if err != nil {
-					flog.Warnf("%s [readPump] wsConnId:%d ReadMessage err:%v", c.RemoteAddr(), c.connId, err)
+					flog.Warnf("[freedom] <readPump> %s wsConnId:%d ReadMessage err:%v", c.RemoteAddr(), c.connId, err)
 					return
 				}
 				// 解析消息
 				msg, err := c.ws.GetMsgPack().Unpack(msgData)
 				if err != nil {
-					flog.Errorf("%s [readPump] wsConnId:%d unpack msg=%s err=%s", c.RemoteAddr(), string(msgData), err.Error())
+					flog.Errorf("[freedom] <readPump> %s wsConnId:%d unpack msg=%s err=%s", c.RemoteAddr(), string(msgData), err.Error())
 					continue
 				}
-				flog.Debugf("[freedom] [readPump] %d | %d", c.connId, len(msgData))
+				flog.Debugf("[freedom] <readPump> %d | %d", c.connId, len(msgData))
 				// 发送conn,msg
 				c.ws.GetRouter().DoMsgHandle(c, msg)
 			}
@@ -187,7 +187,7 @@ func (c *WsConn) writePump(wait *sync.WaitGroup) {
 		//	return
 		case msg, ok := <-c.sendMsgChan:
 			if !ok { //chan没有数据,且关闭ok才会返回false
-				flog.Info(c.remoteAddr(), " [writePump] exit! check close sendMsgChan connId=", c.connId)
+				flog.Info("[freedom] <writePump> %s exit! check close sendMsgChan connId=", c.remoteAddr(), c.connId)
 				// 数据全部发送完毕,关闭链接
 				c.onClosed()
 				return
@@ -195,12 +195,12 @@ func (c *WsConn) writePump(wait *sync.WaitGroup) {
 
 			data, err := c.ws.GetMsgPack().Pack(msg)
 			if err != nil {
-				flog.Errorf("%s [writePump] connId=%d Pack Message Err=%s", c.RemoteAddr(), c.connId, err.Error())
+				flog.Errorf("[freedom] <writePump> %s | %d Pack Message Err=%s", c.remoteAddr(), c.connId, err.Error())
 				goto ERROR
 			}
 			//websocket msg type 1:websocket.TextMessage, 2:websocket.BinaryMessage
 			if err = c.conn.WriteMessage(websocket.BinaryMessage, data); err != nil {
-				flog.Errorf("%s [writePump] connId=%d WriteMessage Err=%s", c.RemoteAddr(), c.connId, err.Error())
+				flog.Errorf("[freedom] <writePump> %s | %d WriteMessage Err=%s", c.remoteAddr(), c.connId, err.Error())
 				goto ERROR
 			}
 		}

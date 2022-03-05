@@ -65,7 +65,7 @@ func (r *MsgRouter) StartWorkerPool() {
 		flog.Warnf("Router already start worker pool")
 		return
 	}
-	flog.Infof("Router start worker pool size[%d]", r.workerPoolSize)
+	flog.Infof("[freedom] Router start worker pool size[%d]", r.workerPoolSize)
 
 	for i := int64(0); i < r.workerPoolSize; i++ {
 		r.workerMsgQueue[i] = make(chan finterface.IContext, fconf.Conf.WorkerMsgCap)
@@ -117,7 +117,7 @@ func (r *MsgRouter) doMsgHandler(ctx finterface.IContext) {
 		flog.Errorf("handler msgId = %d is not found\n", ctx.GetMsgId())
 		return
 	}
-	handler.PreHook(ctx)
+	handler.PreHandle(ctx)
 	handler.Handle(ctx)
-	handler.PostHook(ctx)
+	handler.PostHandle(ctx)
 }

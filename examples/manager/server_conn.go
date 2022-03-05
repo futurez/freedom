@@ -6,10 +6,10 @@ import (
 	"github.com/futurez/freedom/flog"
 )
 
-// 服务器链接
+// ServerConn 服务器链接
 type ServerConn struct{}
 
-//调用OnConnect
+// OnConnect 调用OnConnect
 func (s *ServerConn) OnConnect(conn finterface.IConnection) {
 }
 

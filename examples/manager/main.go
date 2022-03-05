@@ -11,12 +11,12 @@ import (
 	"github.com/futurez/freedom/futils"
 )
 
-// 服务器唯一链接
-var G_WsServer finterface.IServer
+// GWsSvr 服务器唯一链接
+var GWsSvr finterface.IServer
 
-//  通过类型获取服务器链接列表,(一个类型服务器有多个实力,如游戏服务器,接入服务器等)
+// GetSvrConnListByType 通过类型获取服务器链接列表,(一个类型服务器有多个实力,如游戏服务器,接入服务器等)
 func GetSvrConnListByType(svrType int32) []finterface.IConnection {
-	list, _ := G_WsServer.GetConnManager().GetCond(func(conn finterface.IConnection) finterface.CondResult {
+	list, _ := GWsSvr.GetConnManager().GetCond(func(conn finterface.IConnection) finterface.CondResult {
 		if val, ok := conn.GetCache(eproto.CACHE_SVR_TYPE); !ok {
 			return finterface.Cond_InConform
 		} else if val.(int32) == svrType {
@@ -28,9 +28,9 @@ func GetSvrConnListByType(svrType int32) []finterface.IConnection {
 	return list
 }
 
-//  通过类型获取服务器链接
+// GetSvrConnByType 通过类型获取服务器链接
 func GetSvrConnByType(svrType int32) finterface.IConnection {
-	list, err := G_WsServer.GetConnManager().GetCond(func(conn finterface.IConnection) finterface.CondResult {
+	list, err := GWsSvr.GetConnManager().GetCond(func(conn finterface.IConnection) finterface.CondResult {
 		if val, ok := conn.GetCache(eproto.CACHE_SVR_TYPE); !ok {
 			return finterface.Cond_InConform
 		} else if val.(int32) == svrType {
@@ -49,11 +49,11 @@ func main() {
 	flog.InitLogger("manager", eproto.MANAGER_SERVER, "./log", flog.DebugLevel)
 	defer flog.SyncLogger()
 
-	G_WsServer = fnet.NewWsServer("/msg", fmessage.NewJsonPack(), &ServerConn{})
+	GWsSvr = fnet.NewWsServer("/msg", fmessage.NewJsonPack(), &ServerConn{})
 	// 添加消息路由
 	InitRouter()
 
-	G_WsServer.Run(fmt.Sprintf("%s:%d", fconf.Conf.WebsocketIP, fconf.Conf.WebsocketPort))
+	GWsSvr.Run(fmt.Sprintf("%s:%d", fconf.Conf.WebsocketIP, fconf.Conf.WebsocketPort))
 
 	futils.Graceful()
 }

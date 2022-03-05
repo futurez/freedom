@@ -32,6 +32,9 @@ func NewWsClient(ip string, port int32, path string, bReconnect bool, notify fin
 		server:      server,
 		IConnection: nil,
 	}
+	if c.server == nil {
+		c.server = DefWsServer
+	}
 	return &c
 }
 
@@ -40,12 +43,12 @@ func (c *WsClient) ConnectWebSocket() {
 
 	go func() {
 		for {
-			flog.Debugf("[freedom] ConnectWebSocket connecting to %s", u.String())
+			flog.Debugf("[freedom] connecting to %s", u.String())
 			conn, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 			if err != nil {
-				flog.Warnf("[freedom] ConnectWebSocket connecting to %s err:%s", u.String(), err.Error())
+				flog.Warnf("[freedom] connecting to %s err:%s", u.String(), err.Error())
 				if !c.IsReconnect {
-					flog.Infof("[freedom] ConnectWebSocket : not reconnect, quit remote %s", u.String())
+					flog.Infof("[freedom] : not reconnect, quit remote %s", u.String())
 					break
 				}
 				time.Sleep(30 * time.Second)

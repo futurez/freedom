@@ -32,5 +32,5 @@ func ServerRegister(context finterface.IContext) {
 
 func InitRouter() {
 	// 添加消息处理
-	G_WsServer.AddHandleFunc(eproto.CMD_SERVER_REGISTER_REQ, ServerRegister)
+	GWsSvr.AddHandleFunc(eproto.CMD_SERVER_REGISTER_REQ, ServerRegister)
 }

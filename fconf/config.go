@@ -6,6 +6,7 @@ import (
 )
 
 type Config struct {
+	ServerName     string `json:"serverName"`     //服务器名称
 	WebsocketIP    string `json:"websocketIP"`    //websocketIP
 	WebsocketPort  int32  `json:"websocketPort"`  //websocket端口
 	ServerType     int32  `json:"serverType"`     //服务器类型(1-1024)
@@ -20,10 +21,10 @@ var Conf Config
 
 func init() {
 	if err := futils.ReadConfig("config.json", &Conf); err != nil {
-		flog.Warnf("ReadConfig app.cfg err:%s and use default config", err.Error())
+		flog.Warnf("[freedom] ReadConfig app.cfg err:%s and use default config", err.Error())
 		Conf = Config{
 			WebsocketIP:    "0.0.0.0",
-			WebsocketPort:  8888,
+			WebsocketPort:  8080,
 			ServerType:     1,
 			ServerId:       1,
 			MaxWsConn:      100000,
@@ -36,5 +37,5 @@ func init() {
 			Conf.MaxWsConn = 100000
 		}
 	}
-	flog.Debugf("%+v", Conf)
+	//flog.Debugf("%+v", Conf)
 }

@@ -86,7 +86,7 @@ func resolveAddress(addr []string) string {
 			flog.Debugf("Environment variable PORT=\"%s\"", port)
 			return ":" + port
 		}
-		flog.Debugf("Environment variable PORT is undefined. Using port :8080 by default")
+		flog.Warnf("[freedom] Environment variable PORT is undefined. Using port :8080 by default")
 		return ":8080"
 	case 1:
 		return addr[0]
@@ -102,17 +102,16 @@ func (ws *WsServer) Run(addr ...string) {
 	}
 
 	ws.router.StartWorkerPool()
-	go func() {
-		http.HandleFunc(ws.pattern, func(w http.ResponseWriter, r *http.Request) {
-			ws.serveWs(w, r)
-		})
-		address := resolveAddress(addr)
-		flog.Info("Start listen ws://" + address + ws.pattern)
-		if err := http.ListenAndServe(address, nil); err != nil {
-			flog.Error("err:", err)
-			return
-		}
-	}()
+
+	http.HandleFunc(ws.pattern, func(w http.ResponseWriter, r *http.Request) {
+		ws.serveWs(w, r)
+	})
+	address := resolveAddress(addr)
+	flog.Info("[freedom] Start listen ws://" + address + ws.pattern)
+	if err := http.ListenAndServe(address, nil); err != nil {
+		flog.Error("err:", err)
+		return
+	}
 }
 
 func (ws *WsServer) Stop() {
@@ -146,6 +145,44 @@ func (ws *WsServer) AddHandleFunc(msgId uint32, handle func(finterface.IContext)
 //链接管理
 func (ws *WsServer) GetConnManager() finterface.IConnManager {
 	return ws.connMgr
+}
+
+// 默认
+var DefWsServer = DefaultWsServer()
+
+//  启动默认服务
+func WsRun(addr ...string) {
+	DefWsServer.Run(addr...)
+}
+
+// 停止服务
+func WsStop() {
+	DefWsServer.Stop()
+}
+
+// 获取消息解析器
+func WsGetMsgPack() finterface.IMsgPack {
+	return DefWsServer.GetMsgPack()
+}
+
+// 获取路由
+func WsGetRouter() finterface.IRouter {
+	return DefWsServer.GetRouter()
+}
+
+// 添加消息路由接口
+func WsAddHandle(msgId uint32, handle finterface.IMsgHandle) {
+	DefWsServer.AddHandle(msgId, handle)
+}
+
+// 添加消息路由方法
+func WsAddHandleFunc(msgId uint32, handle func(finterface.IContext)) {
+	DefWsServer.AddHandleFunc(msgId, handle)
+}
+
+// 链接管理
+func WsGetConnManager() finterface.IConnManager {
+	return DefWsServer.GetConnManager()
 }
 
 // import golang.org/x/net/websocket

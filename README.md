@@ -84,7 +84,7 @@ func HelloHandleFunc(ctx finterface.IContext) {
 ```
 
 ### 2. client
-freedom的消息处理采用，`[MsgLength]|[MsgID]|[Data]`的封包格式
+freedom主动链接以及消息处理
 ```go
 package main
 

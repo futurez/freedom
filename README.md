@@ -1,8 +1,6 @@
-Freedom是一个基于Golang的并发服务器框架(网络使用的是websocket)
+## Freedom是一个基于Golang的并发服务器框架(网络使用的是websocket)
 
----
-## freedom源码地址
-### Github
+## 一、freedom源码地址Github
     go get -u github.com/futurez/freedom
 
 ## 二、快速启动
@@ -29,7 +27,7 @@ $ go build -o login.bin
 $ ./login.bin
 ```
 
-#### server
+### 1. server
 基于freedom框架开发的服务器应用，主函数步骤比较精简，最多只需要3步即可。
 1. 创建server句柄
 2. 配置自定义路由及业务
@@ -85,7 +83,7 @@ func HelloHandleFunc(ctx finterface.IContext) {
 }
 ```
 
-#### client
+### 2. client
 freedom的消息处理采用，`[MsgLength]|[MsgID]|[Data]`的封包格式
 ```go
 package main
@@ -130,7 +128,7 @@ func (s *ServerClient) OnDisconnect(conn finterface.IConnection) {
 
 ```
 
-### Freedom 配置文件
+## 三. Freedom 配置文件
 ```json
 {
   "serverName"    : "freedomServer",
@@ -163,8 +161,8 @@ func (s *ServerClient) OnDisconnect(conn finterface.IConnection) {
 `sendMsgChanLen`: 发送消息队列长度
 
 
-
-### I.服务器模块Server
+## 四. 主要模块介绍
+### 1. 服务器模块Server
 
 ```go
     func DefaultWsServer() finterface.IServer
@@ -173,38 +171,38 @@ func (s *ServerClient) OnDisconnect(conn finterface.IConnection) {
 ```
 #### 创建一个freedom服务器句柄，该句柄作为当前服务器应用程序的主枢纽，包括如下功能：
 
-#### 1)运行服务
+#### 1). 运行服务
 ```go
   func (s *WsServer) Run(addr ...string)()
 ```
-#### 2)停止服务
+#### 2). 停止服务
 ```go
   func (s *WsServer) Stop()
 ```
-#### 3)获取消息解析器
+#### 3). 获取消息解析器
 ```go
   func (s *WsServer) GetMsgPack() finterface.IMsgPack
 ```
-#### 4)获取路由
+#### 4). 获取路由
 ```go
   func (s *WsServer) GetRouter() finterface.IRouter
 ```
-#### 5)添加消息路由对象
+#### 5). 添加消息路由对象
 ```go
   func (s *WsServer) AddHandle(msgId uint32, handle finterface.IMsgHandle)
 ```
-#### 6)添加消息路由方法
+#### 6). 添加消息路由方法
 ```go
   func (s *WsServer) AddHandleFunc(msgId uint32, handle func(finterface.IContext))
 ```
-#### 7)链接管理
+#### 7). 链接管理
 ```go
   func (s *WsServer)GetConnManager() finterface.IConnManager
 ```
 
-### II.路由模块
+### 2. 路由模块
 
-#### 1) 路由基类
+#### 1). 路由基类
 ```go
   //实现router时，先嵌入这个基类，然后根据需要对这个基类的方法进行重写
   type BaseHandle struct {}
@@ -215,46 +213,46 @@ func (s *ServerClient) OnDisconnect(conn finterface.IConnection) {
   func (b *MsgHandle) Handle(ctx finterface.IContext) {} 
   func (b *MsgHandle) PostHandle(ctx finterface.IContext) {}
 ```
-#### 2) 路由函数
+#### 2). 路由函数
 ```go
   //实现type HandlerFunc func(ctx finterface.IContext)类型函数
   func MsgHandle(ctx finterface.IContext) {}
 ```
 
-### III.链接模块
-#### 1) 成功链接
+### 3. 链接模块
+#### 1). 成功链接
 ```go
   func (c *WsConn) Connected()
 ```
-#### 2) 关闭链接
+#### 2). 关闭链接
 ```go
   func (c *WsConn) Close() bool
 ```
-#### 3) 获取链接ID
+#### 3). 获取链接ID
 ```go 
   func (c *WsConn) GetConnID() int64
 ```
-#### 4) 远程地址
+#### 4). 远程地址
 ```go
   func (c *WsConn) RemoteAddr() string
 ```
-#### 5) 发送消息
+#### 5). 发送消息
 ```go
   func (c *WsConn) SendMessage(msg finterface.IMessage) (err error)
 ```
-#### 6) 发送json数据
+#### 6). 发送json数据
 ```go
   func (c *WsConn) SendMsgData(msgId uint32, code int32, data []byte) error 
 ```
-#### 7) 获取链接状态
+#### 7). 获取链接状态
 ```go
   func (c *WsConn) GetConnStats()
 ```
-#### 8)  设置缓存                                     
+#### 8). 设置缓存                                     
 ```go
   func (c *WsConn) SetCache(key string, val interface{})
 ```
-#### 9) 
+#### 9). 获取缓存
 ```go
   func (c *WsConn) GetCache(key string) (interface{}, bool)
 ```
